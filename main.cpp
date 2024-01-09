@@ -14,7 +14,9 @@ const int AXE_LENGTH = 50;
 const int AXE_VELOCITY = 50;
 
 // Functions.
-void handleAxe(Vector2, Vector2 &, bool &);
+void handleAttempts(int &);
+void handleStreak(int &);
+void handleAxe(Vector2, Vector2 &, bool &, int &);
 void handleTarget(Vector2 &, int &);
 bool handleCollision(Vector2, Vector2);
 // Vector2 moveRect(int &, Vector2);
@@ -34,19 +36,44 @@ int main()
     Vector2 mPos{};
     Vector2 axePos{};
     bool hasBeenThrown{false};
+    bool didHit{false};
+    int attempts{3};
+    int streak{};
 
     while (!WindowShouldClose())
     {
         BeginDrawing();
 
+        handleAttempts(attempts);
+        handleStreak(streak);
         handleTarget(targetPos, targetDirection);
-        handleAxe(mPos, axePos, hasBeenThrown);
-        handleCollision(axePos, targetPos);
+        handleAxe(mPos, axePos, hasBeenThrown, attempts);
+
+        didHit = handleCollision(axePos, targetPos);
+        if (didHit)
+        {
+            streak++;
+        }
+        // TODO: Work on getting streak to only increment once.
 
         ClearBackground(RED);
         EndDrawing();
     }
     printf("Close window has been triggered.\n");
+}
+
+void handleAttempts(int &attempts)
+{
+    char attemptText{};
+    sprintf(&attemptText, "Attempts: %d", attempts);
+    DrawText(&attemptText, 50, 50, 75, BLACK);
+}
+
+void handleStreak(int &streak)
+{
+    char streakText{};
+    sprintf(&streakText, "Streak: %d", streak);
+    DrawText(&streakText, 1050, 50, 75, BLACK);
 }
 
 void handleTarget(Vector2 &targetPos, int &targetDirection)
@@ -63,15 +90,16 @@ void handleTarget(Vector2 &targetPos, int &targetDirection)
     DrawCircle(targetPos.x, targetPos.y, TARGET_RADIUS, BLUE);
 }
 
-void handleAxe(Vector2 mPos, Vector2 &axePos, bool &hasBeenThrown)
+void handleAxe(Vector2 mPos, Vector2 &axePos, bool &hasBeenThrown, int &attempts)
 {
     /*
      * axe should follow the mouse until pressed                             [COMPLETED]
-     * once pressed the axe should shoot forward
-     * if the axe shoots past the bounds, then reset the axe to the mouse
+     * once pressed the axe should shoot forward                             [COMPLETED]
+     * if the axe shoots past the bounds, then reset the axe to the mouse    [COMPLETED]
      */
     bool isOutOfBounds{};
-    if (axePos.y <= 0) {
+    if (axePos.y <= 0)
+    {
         isOutOfBounds = true;
         hasBeenThrown = false;
     }
@@ -91,6 +119,10 @@ void handleAxe(Vector2 mPos, Vector2 &axePos, bool &hasBeenThrown)
     if (IsMouseButtonPressed(0) && isOutOfBounds)
     {
         puts("Mouse button has been pressed!");
+        if (attempts > 0)
+        {
+            --attempts;
+        }
         hasBeenThrown = true;
         axePos.x = mPos.x;
         axePos.y = mPos.y;
@@ -109,7 +141,7 @@ bool handleCollision(Vector2 axePos, Vector2 targetPos)
     int targetYUppderBound = targetPos.y - TARGET_RADIUS;
     int targetYLowerBound = targetPos.y + TARGET_RADIUS;
 
-    if ((axePos.x >= targetXLowerBound || axePos.x+AXE_LENGTH >= targetXLowerBound) &&
+    if ((axePos.x >= targetXLowerBound || axePos.x + AXE_LENGTH >= targetXLowerBound) &&
         axePos.x <= targetXUppderBound &&
         axePos.y <= targetYLowerBound &&
         axePos.y >= targetYUppderBound)
